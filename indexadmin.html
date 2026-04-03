@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Mobile Optimized</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root { --primary: #ff9800; --bg: #050505; --surface: #151515; --text: #ffffff; --border: #2a2a2a; --red: #ff3d00; --green: #00ce52; --blue: #1292d8; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Hind Siliguri', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: var(--text); overflow-x: hidden; display: flex; flex-direction: column; height: 100vh; }
+
+        #login-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
+        .login-box { background: var(--surface); padding: 30px 20px; border-radius: 20px; border: 1px solid var(--border); width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .login-box h2 { color: var(--primary); margin-bottom: 25px; font-size: 24px; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 8px; color: #aaa; font-size: 14px; }
+        .input-group input, .input-group select { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--border); background: #0a0a0a; color: #fff; outline: none; font-size: 16px; transition: 0.3s; }
+        .input-group input:focus { border-color: var(--primary); }
+        .btn { background: var(--primary); color: #000; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; width: 100%; }
+        .btn-auto { width: auto; padding: 12px 25px; }
+        .btn:active { transform: scale(0.96); }
+        .btn-danger { background: var(--red); color: white; }
+        .btn-success { background: var(--green); color: white; }
+
+        #admin-panel { display: none; flex-direction: column; height: 100%; }
+        .app-header { background: var(--surface); padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .app-header h2 { color: var(--primary); font-size: 20px; font-weight: 700; }
+        .logout-icon { color: var(--red); font-size: 22px; cursor: pointer; padding: 5px; }
+
+        .main-content { flex: 1; padding: 15px; overflow-y: auto; padding-bottom: 90px; }
+        .section { display: none; animation: fadeIn 0.3s ease; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .section-header { margin-bottom: 15px; }
+        .section-header h2 { font-size: 20px; color: #fff; display: flex; align-items: center; gap: 10px; }
+
+        .dash-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .card { background: var(--surface); padding: 20px 15px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
+        .card h3 { font-size: 13px; color: #aaa; margin-bottom: 8px; }
+        .card p { font-size: 26px; color: var(--primary); font-weight: bold; }
+        .card-full { grid-column: span 2; background: linear-gradient(135deg, #1a1a1a, #0a0a0a); }
+
+        .video-list { display: flex; flex-direction: column; gap: 12px; }
+        .vid-card { background: var(--surface); border: 1px solid var(--border); border-radius: 15px; padding: 12px; display: flex; gap: 12px; align-items: center; position: relative; }
+        .vid-thumb { width: 90px; height: 65px; border-radius: 8px; object-fit: cover; border: 1px solid #333; }
+        .vid-info { flex: 1; overflow: hidden; }
+        .vid-title { font-size: 15px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
+        .vid-meta { font-size: 12px; color: #888; display: flex; gap: 10px; }
+        .vid-meta span { background: #000; padding: 2px 8px; border-radius: 4px; }
+        .vid-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .action-btn { padding: 6px 15px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; color: #fff; cursor: pointer; flex: 1; display: flex; justify-content: center; align-items: center; gap: 5px; }
+        .btn-edit { background: var(--blue); }
+        .btn-del { background: var(--red); }
+
+        .cat-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .cat-item { background: var(--surface); padding: 15px; border-radius: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .cat-item span { font-size: 16px; font-weight: 500; }
+        .cat-item button { background: var(--red); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+
+        .fab { position: fixed; bottom: 85px; right: 20px; width: 60px; height: 60px; background: var(--primary); color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4); border: none; cursor: pointer; z-index: 100; transition: 0.3s; }
+        .fab:active { transform: scale(0.9); }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); align-items: flex-end; z-index: 9999; }
+        .modal-content { background: var(--surface); width: 100%; border-radius: 25px 25px 0 0; padding: 25px 20px; border-top: 2px solid var(--primary); max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-content h3 { margin-bottom: 20px; color: var(--primary); text-align: center; font-size: 20px; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--surface); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 1000; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+        .nav-item { flex: 1; text-align: center; color: #777; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+        .nav-item i { font-size: 22px; }
+        .nav-item.active { color: var(--primary); }
+
+        .settings-box { background: var(--surface); padding: 20px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 25px; }
+
+        /* Modified Episode Block CSS */
+        .ep-box { background: #111; border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 10px; position: relative; display: flex; flex-direction: column; gap: 10px; }
+        .ep-header { display: flex; justify-content: space-between; align-items: center; }
+        .ep-header span { color: var(--primary); font-weight: bold; font-size: 15px; }
+        .ep-box .del-ep-btn { background: rgba(255, 61, 0, 0.2); color: var(--red); border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+        .ep-box input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: #0a0a0a; color: #fff; outline: none; }
+        
+        .add-ep-btn { width: 100%; background: transparent; border: 2px dashed #444; color: #aaa; padding: 15px; border-radius: 12px; font-weight: bold; margin-top: 10px; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .add-ep-btn:hover { border-color: var(--primary); color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <h2><i class="fas fa-shield-alt"></i> এডমিন প্যানেল</h2>
+            <div class="input-group"><label>ইমেইল এড্রেস</label><input type="email" id="email" placeholder="admin@example.com"></div>
+            <div class="input-group"><label>পাসওয়ার্ড</label><input type="password" id="password" placeholder="••••••••"></div>
+            <button class="btn" onclick="login()">লগিন করুন <i class="fas fa-arrow-right"></i></button>
+            <p id="login-error" style="color: var(--red); margin-top: 15px; display: none; font-size: 14px;">ভুল ইমেইল বা পাসওয়ার্ড!</p>
+        </div>
+    </div>
+
+    <div id="admin-panel">
+        <div class="app-header"><h2>Vairal Link City</h2><i class="fas fa-power-off logout-icon" onclick="logout()"></i></div>
+
+        <div class="main-content">
+            <div id="dashboard" class="section active">
+                <div class="section-header"><h2><i class="fas fa-chart-pie"></i> ওভারভিউ</h2></div>
+                <div class="dash-cards">
+                    <div class="card"><h3>মোট ভিডিও/সিরিজ</h3><p id="total-videos">0</p></div>
+                    <div class="card"><h3>মোট ক্যাটাগরি</h3><p id="total-cats">0</p></div>
+                    <div class="card card-full"><h3>মোট ভিউজ</h3><p id="total-views">0</p></div>
+                </div>
+            </div>
+
+            <div id="manage-videos" class="section">
+                <div class="section-header"><h2><i class="fas fa-film"></i> সকল ভিডিও লিস্ট</h2></div>
+                <div class="video-list" id="video-list-container"></div>
+                <button class="fab" onclick="openVideoModal()"><i class="fas fa-plus"></i></button>
+            </div>
+
+            <div id="manage-categories" class="section">
+                <div class="section-header"><h2><i class="fas fa-tags"></i> ক্যাটাগরি ম্যানেজ</h2></div>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <input type="text" id="new-cat-name" placeholder="নতুন নাম..." style="flex:1; padding:15px; border-radius:12px; border:1px solid var(--border); background:#0a0a0a; color:#fff; font-size:16px; outline:none;">
+                    <button class="btn btn-success" style="width: auto; padding: 0 20px;" onclick="addCategory()"><i class="fas fa-plus"></i></button>
+                </div>
+                <div class="cat-list" id="cat-list-container"></div>
+            </div>
+
+            <div id="settings" class="section">
+                <div class="section-header"><h2><i class="fas fa-tools"></i> টিউটোরিয়াল ভিডিও</h2></div>
+                <div class="settings-box">
+                    <div class="input-group"><label>টিউটোরিয়াল টাইটেল</label><input type="text" id="tut-title" placeholder="কিভাবে ভিডিও দেখবেন?"></div>
+                    <div class="input-group"><label> (Direct/Drive)</label><input type="text" id="tut-url" placeholder="Video Link"></div>
+                    <button class="btn btn-success" onclick="saveTutSettings()"><i class="fas fa-check-circle"></i> ভিডিও আপডেট করুন</button>
+                </div>
+
+                <div class="section-header"><h2><i class="fas fa-share-alt"></i> সোশ্যাল লিংক ম্যানেজ</h2></div>
+                <div class="settings-box">
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                        <input type="text" id="social-title" placeholder="টাইটেল (যেমন: আমাদের মেইন গ্রুপ)" style="padding:15px; border-radius:12px; border:1px solid var(--border); background:#0a0a0a; color:#fff; outline:none;">
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="social-url" placeholder="লিংক (Link)" style="flex:1; padding:15px; border-radius:12px; border:1px solid var(--border); background:#0a0a0a; color:#fff; outline:none;">
+                            <button class="btn btn-success" style="width: auto; padding: 0 20px;" onclick="addSocialLink()"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <div class="cat-list" id="social-list-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchTab('dashboard', this)"><i class="fas fa-home"></i><span>হোম</span></div>
+            <div class="nav-item" onclick="switchTab('manage-videos', this)"><i class="fas fa-video"></i><span>ভিডিও</span></div>
+            <div class="nav-item" onclick="switchTab('manage-categories', this)"><i class="fas fa-list"></i><span>ক্যাটাগরি</span></div>
+            <div class="nav-item" onclick="switchTab('settings', this)"><i class="fas fa-cog"></i><span>সেটিংস</span></div>
+        </div>
+    </div>
+
+    <!-- Video Modal -->
+    <div id="videoModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title">নতুন ভিডিও যোগ করুন</h3>
+            <input type="hidden" id="vid-id">
+            
+            <div class="input-group">
+                <label>Your Video Title</label>
+                <input type="text" id="vid-title" placeholder="Your Video Title">
+            </div>
+            <div class="input-group">
+                <label>থাম্বনেইল লিংক</label>
+                <input type="text" id="vid-thumb" placeholder="থাম্বনেইল লিংক">
+            </div>
+            <div class="input-group">
+                <label>ক্যাটাগরি</label>
+                <select id="vid-category"></select>
+            </div>
+            
+            <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 15px;">
+                <label style="color: #aaa; font-size: 14px; display:block; margin-bottom: 10px;">Your Video Link</label>
+                <div id="episodes-container"></div>
+                
+                <!-- Add Button at the bottom -->
+                <button class="add-ep-btn" onclick="addEpisodeBlock()">+ Add Episode</button>
+            </div>
+            
+            <!-- Action Buttons (Save on Right) -->
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 30px;">
+                <button class="btn btn-danger btn-auto" onclick="closeModal()">বাতিল</button>
+                <button class="btn btn-success btn-auto" onclick="saveVideo()"><i class="fas fa-save"></i> সেভ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMaDlmpYX6sGQelcS5Q8oOmTP0lAM-6uw",
+            authDomain: "fine-chat-fbacd.firebaseapp.com",
+            databaseURL: "https://fine-chat-fbacd-default-rtdb.firebaseio.com",
+            projectId: "fine-chat-fbacd",
+            storageBucket: "fine-chat-fbacd.firebasestorage.app",
+            messagingSenderId: "354261282879",
+            appId: "1:354261282879:web:bdf6f4d1163e5bf7ef888a"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        let allVideos = [], allCategories = [], allSocials = [];
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('admin-panel').style.display = 'flex';
+                loadData();
+            } else {
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('admin-panel').style.display = 'none';
+            }
+        });
+
+        function login() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            if(!email || !pass) return alert("ইমেইল ও পাসওয়ার্ড দিন");
+            auth.signInWithEmailAndPassword(email, pass).catch(err => {
+                document.getElementById('login-error').style.display = 'block';
+            });
+        }
+        function logout() { auth.signOut(); }
+
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(li => li.classList.remove('active'));
+            element.classList.add('active');
+            window.scrollTo(0, 0); 
+        }
+
+        function loadData() {
+            db.ref('videos').on('value', snap => {
+                allVideos = []; let totalViews = 0;
+                snap.forEach(child => {
+                    let v = child.val();
+                    allVideos.push({ id: child.key, ...v });
+                    totalViews += (v.views || 0);
+                });
+                document.getElementById('total-videos').innerText = allVideos.length;
+                document.getElementById('total-views').innerText = totalViews;
+                renderVideoList();
+            });
+
+            db.ref('categories').on('value', snap => {
+                allCategories = [];
+                snap.forEach(child => { allCategories.push({ id: child.key, name: child.val().name }); });
+                document.getElementById('total-cats').innerText = allCategories.length;
+                renderCategoryList();
+                updateCategoryDropdown();
+            });
+
+            db.ref('settings/tutorial').on('value', snap => {
+                const data = snap.val() || {};
+                document.getElementById('tut-title').value = data.title || "";
+                document.getElementById('tut-url').value = data.url || "";
+            });
+
+            db.ref('settings/socials').on('value', snap => {
+                allSocials = [];
+                snap.forEach(child => {
+                    let s = child.val();
+                    if(s.title && s.url) allSocials.push({ id: child.key, ...s });
+                });
+                renderSocialList();
+            });
+        }
+
+        function renderVideoList() {
+            const container = document.getElementById('video-list-container');
+            if(allVideos.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:#555; padding: 20px;">কোনো ভিডিও নেই!</p>`;
+                return;
+            }
+            container.innerHTML = allVideos.reverse().map(v => {
+                let epCount = v.episodes ? v.episodes.length : (v.url ? 1 : 0);
+                return `
+                <div class="vid-card">
+                    <img src="${v.thumbnail}" class="vid-thumb">
+                    <div class="vid-info">
+                        <div class="vid-title">${v.title}</div>
+                        <div class="vid-meta">
+                            <span><i class="fas fa-tag"></i> ${v.category}</span>
+                            <span><i class="fas fa-list"></i> ${epCount} Eps</span>
+                        </div>
+                        <div class="vid-actions">
+                            <button class="action-btn btn-edit" onclick="editVideo('${v.id}')"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="action-btn btn-del" onclick="deleteVideo('${v.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // --- NEW: Auto Episode Logic ---
+        function updateEpisodeNumbers() {
+            const boxes = document.querySelectorAll('.ep-box');
+            boxes.forEach((box, index) => {
+                box.querySelector('.ep-num-label').innerText = `Episode ${index + 1}`;
+            });
+        }
+
+        function addEpisodeBlock(url = "") {
+            const container = document.getElementById('episodes-container');
+            const div = document.createElement('div');
+            div.className = 'ep-box';
+            div.innerHTML = `
+                <div class="ep-header">
+                    <span class="ep-num-label">Episode 0</span>
+                    <button type="button" class="del-ep-btn" onclick="removeEpisode(this)"><i class="fas fa-trash"></i></button>
+                </div>
+                <input type="text" class="ep-url-input" placeholder="Video Link" value="${url}">
+            `;
+            container.appendChild(div);
+            updateEpisodeNumbers();
+        }
+
+        function removeEpisode(btn) {
+            btn.closest('.ep-box').remove();
+            updateEpisodeNumbers();
+        }
+
+        function openVideoModal(id = null) {
+            document.getElementById('videoModal').style.display = 'flex';
+            document.getElementById('episodes-container').innerHTML = ''; 
+
+            if (id) {
+                const v = allVideos.find(vid => vid.id === id);
+                document.getElementById('modal-title').innerText = "ভিডিও/সিরিজ এডিট করুন";
+                document.getElementById('vid-id').value = v.id;
+                document.getElementById('vid-title').value = v.title;
+                document.getElementById('vid-thumb').value = v.thumbnail;
+                document.getElementById('vid-category').value = v.category;
+                
+                if(v.episodes && v.episodes.length > 0) {
+                    v.episodes.forEach(ep => addEpisodeBlock(ep.url));
+                } else if(v.url) {
+                    addEpisodeBlock(v.url);
+                }
+            } else {
+                document.getElementById('modal-title').innerText = "নতুন ভিডিও অ্যাড করুন";
+                document.getElementById('vid-id').value = "";
+                document.getElementById('vid-title').value = "";
+                document.getElementById('vid-thumb').value = "";
+                addEpisodeBlock(""); 
+            }
+        }
+
+        function closeModal() { document.getElementById('videoModal').style.display = 'none'; }
+
+        function saveVideo() {
+            const id = document.getElementById('vid-id').value;
+            const title = document.getElementById('vid-title').value;
+            const thumb = document.getElementById('vid-thumb').value;
+            const cat = document.getElementById('vid-category').value;
+
+            let episodes = [];
+            document.querySelectorAll('.ep-box').forEach((box, index) => {
+                let epU = box.querySelector('.ep-url-input').value.trim();
+                if(epU) episodes.push({ title: `Episode ${index + 1}`, url: epU });
+            });
+
+            if(!title || !thumb || episodes.length === 0) {
+                return alert("দয়া করে টাইটেল, থাম্বনেইল এবং অন্তত ১টি এপিসোড লিংক দিন!");
+            }
+
+            const data = { title: title, thumbnail: thumb, category: cat, episodes: episodes };
+            data.url = episodes[0].url; // Backup
+
+            if (id) db.ref('videos/' + id).update(data);
+            else { data.views = 0; db.ref('videos').push(data); }
+            closeModal();
+        }
+        
+        function editVideo(id) { openVideoModal(id); }
+        function deleteVideo(id) { if(confirm("ভিডিওটি ডিলিট করতে চান?")) db.ref('videos/' + id).remove(); }
+
+        function renderCategoryList() {
+            document.getElementById('cat-list-container').innerHTML = allCategories.map(c => `
+                <div class="cat-item"><span>${c.name}</span><button onclick="deleteCategory('${c.id}')"><i class="fas fa-trash"></i></button></div>
+            `).join('');
+        }
+        function updateCategoryDropdown() { document.getElementById('vid-category').innerHTML = allCategories.map(c => `<option value="${c.name}">${c.name}</option>`).join(''); }
+        function addCategory() {
+            const name = document.getElementById('new-cat-name').value.trim();
+            if(name) { db.ref('categories').push({ name: name }); document.getElementById('new-cat-name').value = ""; }
+        }
+        function deleteCategory(id) { if(confirm("ক্যাটাগরি ডিলিট করতে চান?")) db.ref('categories/' + id).remove(); }
+
+        function saveTutSettings() {
+            db.ref('settings/tutorial').set({ title: document.getElementById('tut-title').value, url: document.getElementById('tut-url').value })
+            .then(() => alert("আপডেট সফল হয়েছে!"));
+        }
+
+        function renderSocialList() {
+            const container = document.getElementById('social-list-container');
+            if(allSocials.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:#555; padding: 10px;">কোনো লিংক অ্যাড করা নেই</p>`;
+                return;
+            }
+            container.innerHTML = allSocials.map(s => `
+                <div class="cat-item" style="flex-direction:column; align-items:flex-start; gap:8px;">
+                    <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                        <span style="font-weight:bold; color:var(--primary);">${s.title}</span>
+                        <button onclick="deleteSocial('${s.id}')" style="padding: 6px 10px;"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <small style="color:#888; word-break: break-all; font-size: 13px;">${s.url}</small>
+                </div>
+            `).join('');
+        }
+
+        function addSocialLink() {
+            let title = document.getElementById('social-title').value.trim();
+            let url = document.getElementById('social-url').value.trim();
+            if(title && url) {
+                db.ref('settings/socials').push({ title, url });
+                document.getElementById('social-title').value = ''; document.getElementById('social-url').value = '';
+            } else { alert("দয়া করে টাইটেল ও লিংক দুটোই দিন!"); }
+        }
+        function deleteSocial(id) { if(confirm("সোশ্যাল লিংকটি ডিলিট করতে চান?")) db.ref('settings/socials/' + id).remove(); }
+    </script>
+</body>
+</html>
